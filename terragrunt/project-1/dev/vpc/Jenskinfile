@@ -1,0 +1,28 @@
+pipeline {
+
+	agent any
+    parameters {
+        choice(name: 'TERRAGRUNT_ACTION', choices: 'init\nplan\napply -auto-approve\nplan -destroy\ndestroy -auto-approve', description: 'Terraform action to execute')
+    }
+    environment {
+        TERRAGRUNT_PATH         = "$WORKSPACE/terragrunt/project-1/dev/vpc"
+        AWS_ACCESS_KEY_ID       = ""
+        AWS_SECRET_ACCESS_KEY   = ""
+        AWS_DEFAULT_REGION      = "ap-south-1" 
+    }
+
+    stages {
+        stage('checkout') {
+            steps {
+              checkout([$class: 'GitSCM', branches: [[name: '*/master']], extensions: [], userRemoteConfigs: [[credentialsId: 'jenkins-to-github-connection-key', url: '<this project url>']]])
+            }
+        }
+        stage('Terragrunt') {
+            
+            steps {
+                    sh("terragrunt ${TERRAGRUNT_ACTION} --terragrunt-working-dir ${TERRAGRUNT_PATH} --terragrunt-non-interactive")
+                }
+            }
+
+        }
+}
